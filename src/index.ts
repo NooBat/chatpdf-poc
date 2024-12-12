@@ -5,10 +5,8 @@ import readline from 'readline';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { HuggingFaceTransformersEmbeddings } from '@langchain/community/embeddings/hf_transformers';
 import { FaissStore } from '@langchain/community/vectorstores/faiss';
-import { CacheBackedEmbeddings } from 'langchain/embeddings/cache_backed';
-import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { InMemoryStore } from '@langchain/core/stores';
+import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -27,7 +25,8 @@ const prompt: () => Promise<string> = async () => {
 };
 
 const start = async () => {
-  const pdfPath = './pdf/[CTCT Website] 4th meeting 25_02_23.pdf';
+  // Change the path to the PDF file you want to use
+  const pdfPath = './pdf/context.pdf';
   const pdfLoader = new PDFLoader(pdfPath);
   const textSplitter = new RecursiveCharacterTextSplitter();
 
@@ -42,17 +41,7 @@ const start = async () => {
     },
   });
 
-  const inMemoryStore = new InMemoryStore();
-
-  const cacheBackedEmbeddings = CacheBackedEmbeddings.fromBytesStore(
-    embeddingModel,
-    inMemoryStore,
-    {
-      namespace: embeddingModel.modelName,
-    }
-  );
-
-  const db = await FaissStore.fromDocuments(pages, cacheBackedEmbeddings);
+  const db = await FaissStore.fromDocuments(pages, embeddingModel);
 
   const llmProvider = new ChatGoogleGenerativeAI({
     model: 'gemini-pro',
